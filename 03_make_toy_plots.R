@@ -2,7 +2,7 @@
 library(ggplot2)
 library(ggpubr)
 
-## TOY PLOT 1: 
+## TOY PLOT 1: One-Sample KS (ECDF vs Normal Reference Dist)
 
 # Generate random data
 set.seed(123)
@@ -26,35 +26,7 @@ ggsave(filename = "figures/ECDF_Normal_Comp.png", plot = p1, device = "png", hei
 
 
 
-## TOY PLOT 2:
-
-# Define the normal distribution parameters
-mu <- 0
-sigma <- 1
-
-# Generate x values for the normal distribution
-x <- seq(-4, 4, length.out = 1000)
-
-# Calculate the normal density
-y <- dnorm(x, mean = mu, sd = sigma)
-
-# Create a data frame for the shaded regions
-df <- data.frame(x = x, y = y)
-
-# Shade the tails
-p2 <- ggplot(df, aes(x, y)) +
-  geom_area(data = subset(df, x < qnorm(0.025)), fill = "blue") +
-  geom_area(data = subset(df, x > qnorm(0.975)), fill = "green") +
-  geom_line(color = "black") +
-  labs(title = "Normal Distribution & Tail Probabilities", 
-       x = "", y = "") +
-  theme_minimal()+ theme(plot.title = element_text(hjust = 0.5))
-
-# Save
-ggsave(filename = "figures/Normal_Tails.png", plot = p2, device = "png", height = 6, width = 8, dpi = 1200)
-
-
-## TOY PLOT 2:
+## TOY PLOT 2: Two-Sample KS (ECDF vs ECDF)
 
 # Generate the two samples
 set.seed(123)
@@ -78,7 +50,7 @@ df_ecdf <- data.frame(x = seq(min(df$x), max(df$x), length.out = 100),
 df_ecdf_long <- tidyr::gather(df_ecdf, key = "group", value = "y", y_t, y_norm)
 
 # Create the plot
-p3 <- ggplot(data = df_ecdf_long, aes(x = x, y = y, color = group)) +
+p2 <- ggplot(data = df_ecdf_long, aes(x = x, y = y, color = group)) +
   geom_step() +
   scale_color_manual(values = c("red", "blue")) +
   labs(x = "x", y = "", color = "Distribution") +
@@ -86,5 +58,112 @@ p3 <- ggplot(data = df_ecdf_long, aes(x = x, y = y, color = group)) +
 
 
 # Save
-ggsave(filename = "figures/Two_sample_KS.png", plot = p3, device = "png", height = 6, width = 8, dpi = 1200)
+ggsave(filename = "figures/Two_sample_KS.png", plot = p2, device = "png", height = 6, width = 8, dpi = 1200)
+
+
+
+
+### TOY PLOT 3: Dist of taui_hats
+
+library(ggplot2)
+
+# Generate data
+set.seed(123)
+data <- c(rnorm(900), rnorm(50, mean = 3), rnorm(50, mean = -3))
+
+# Calculate density estimate
+dens <- density(data, n = 1000)
+
+# Define cutoffs for shading tails
+cutoff_left <- quantile(data, 0.05)
+cutoff_right <- quantile(data, 0.95)
+
+# Create plot
+p3 <- ggplot() +
+  # Add density curve
+  geom_line(data = data.frame(x = dens$x, y = dens$y), aes(x = x, y = y)) +
+  # Add shading to left tail
+  geom_area(data = subset(data.frame(x = dens$x, y = dens$y), x < cutoff_left), aes(x = x, y = y), fill = "blue", alpha = 0.3) +
+  # Add shading to right tail
+  geom_area(data = subset(data.frame(x = dens$x, y = dens$y), x > cutoff_right), aes(x = x, y = y), fill = "red", alpha = 0.3) +
+  # Add vertical lines for cutoffs
+  geom_vline(xintercept = cutoff_left, linetype = "dashed", color = "blue") +
+  geom_vline(xintercept = cutoff_right, linetype = "dashed", color = "red") +
+  # Set plot limits
+  xlim(min(data), max(data)) +
+  ylim(0, max(dens$y) * 1.1) +
+  # Add plot labels and title
+  labs(x = "", y = "", title = "Example distribution of taui_hats 1 million pairs")+
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Save
+ggsave(filename = "figures/Dist_taui_hats.png", plot = p3, device = "png", height = 6, width = 8, dpi = 1200)
+
+
+### TOY PLOT 4: F(x) versus 1-F(-x) for Symmetric Dist
+
+# Set random seed for reproducibility
+set.seed(13)
+
+# Generate data from a symmetric standard normal distribution
+data <- rnorm(100)
+
+# Calculate the ECDF of the data
+ecdf_data <- ecdf(data)
+
+# Create a data frame for plotting the ECDF and its complement
+plot_data <- data.frame(x = seq(min(data), max(data), length.out = 100))
+plot_data$ecdf <- ecdf_data(plot_data$x)
+plot_data$comp_ecdf <- 1 - ecdf_data(-plot_data$x)
+
+# Plot the ECDF and its complement on the same plot
+p4 <- ggplot(plot_data, aes(x = x)) +
+  geom_line(aes(y = ecdf, color = "ECDF of data")) +
+  geom_line(aes(y = comp_ecdf, color = "Complement of ECDF of neg. data")) +
+  ggtitle("F(x) vs 1-F(-x) for a Symmetric Distribution") +
+  xlab("x") +
+  ylab("")  + theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = "none")
+
+# Save
+ggsave(filename = "figures/ecdfs_symmetric.png", plot = p4, device = "png", height = 6, width = 8, dpi = 1200)
+
+
+
+### TOY PLOT 5: F(x) versus 1-F(-x) for Non-Symmetric Dist
+
+set.seed(751)
+# Generate data from a non-symmetric distribution
+data <- rbeta(50, 2, 5)
+
+# Calculate the ECDF of the data
+ecdf_data <- ecdf(data)
+
+# Create a data frame for plotting the ECDF and its complement
+max_val <- max(abs(data))
+plot_data <- data.frame(x = seq(-max_val, max_val, length.out = 100))
+plot_data$ecdf <- ecdf_data(plot_data$x)
+plot_data$comp_ecdf <- 1 - ecdf_data(-plot_data$x)
+
+# Plot the ECDF and its complement on the same plot
+p5 <- ggplot(plot_data, aes(x = x)) +
+  geom_line(aes(y = ecdf, color = "ECDF of data")) +
+  geom_line(aes(y = comp_ecdf, color = "Complement of ECDF of neg. data")) +
+  ggtitle("F(x) vs 1-F(-x) for a Non-symmetric Distribution") +
+  xlab("x") +
+  ylab("") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = "none")
+p5
+
+
+# Save
+ggsave(filename = "figures/ecdfs_asymmetric.png", plot = p5, device = "png", height = 6, width = 8, dpi = 1200)
+
+
+
+
+
+
 
