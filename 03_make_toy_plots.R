@@ -1,6 +1,7 @@
 ### Making some toy plots to demonstrate how KS works!
 library(ggplot2)
 library(ggpubr)
+library(sn) #skewed normal
 
 ## TOY PLOT 1: One-Sample KS (ECDF vs Normal Reference Dist)
 
@@ -18,8 +19,10 @@ p1 <- ggplot(df, aes(x)) +
   geom_step(aes(y = ecdf), color = "blue", size = 1.2) +
   geom_line(aes(y = norm_cdf), color = "red", size = 1.2) +
   labs(x = "x", y="",
-       title = "Sample ECDF vs Normal Reference Distribution ") +
-  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
+       title = "") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5)) +
+  theme(text=element_text(size=14))
+p1
 
 # Save 
 ggsave(filename = "figures/ECDF_Normal_Comp.png", plot = p1, device = "png", height = 6, width = 8, dpi = 1200)
@@ -54,8 +57,9 @@ p2 <- ggplot(data = df_ecdf_long, aes(x = x, y = y, color = group)) +
   geom_step() +
   scale_color_manual(values = c("red", "blue")) +
   labs(x = "x", y = "", color = "Distribution") +
-  theme_minimal()
-
+  theme_minimal()+ theme(text=element_text(size=14)) + 
+  theme(legend.position = "none")
+p2
 
 # Save
 ggsave(filename = "figures/Two_sample_KS.png", plot = p2, device = "png", height = 6, width = 8, dpi = 1200)
@@ -93,8 +97,10 @@ p3 <- ggplot() +
   xlim(min(data), max(data)) +
   ylim(0, max(dens$y) * 1.1) +
   # Add plot labels and title
-  labs(x = "", y = "", title = "Example distribution of taui_hats 1 million pairs")+
-  theme(plot.title = element_text(hjust = 0.5))
+  labs(x = "", y = "", title = "")+
+  theme(plot.title = element_text(hjust = 0.5)) + theme_minimal() +
+  theme(text=element_text(size=14))
+p3
 
 
 # Save
@@ -121,10 +127,10 @@ plot_data$comp_ecdf <- 1 - ecdf_data(-plot_data$x)
 p4 <- ggplot(plot_data, aes(x = x)) +
   geom_line(aes(y = ecdf, color = "ECDF of data")) +
   geom_line(aes(y = comp_ecdf, color = "Complement of ECDF of neg. data")) +
-  ggtitle("F(x) vs 1-F(-x) for a Symmetric Distribution") +
   xlab("x") +
   ylab("")  + theme(plot.title = element_text(hjust = 0.5)) +
-  theme(legend.position = "none")
+  theme_minimal()+ theme(legend.position = "none")+ theme(text=element_text(size=14))
+p4
 
 # Save
 ggsave(filename = "figures/ecdfs_symmetric.png", plot = p4, device = "png", height = 6, width = 8, dpi = 1200)
@@ -135,7 +141,7 @@ ggsave(filename = "figures/ecdfs_symmetric.png", plot = p4, device = "png", heig
 
 set.seed(751)
 # Generate data from a non-symmetric distribution
-data <- rbeta(50, 2, 5)
+data <- rsn(n=50, alpha=3)
 
 # Calculate the ECDF of the data
 ecdf_data <- ecdf(data)
@@ -150,11 +156,10 @@ plot_data$comp_ecdf <- 1 - ecdf_data(-plot_data$x)
 p5 <- ggplot(plot_data, aes(x = x)) +
   geom_line(aes(y = ecdf, color = "ECDF of data")) +
   geom_line(aes(y = comp_ecdf, color = "Complement of ECDF of neg. data")) +
-  ggtitle("F(x) vs 1-F(-x) for a Non-symmetric Distribution") +
   xlab("x") +
   ylab("") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme(legend.position = "none")
+  theme(plot.title = element_text(hjust = 0.5)) + theme_minimal()+
+  theme(legend.position = "none") + theme(text=element_text(size=14))
 p5
 
 
