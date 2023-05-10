@@ -19,7 +19,7 @@ p1 <- ggplot(df, aes(x)) +
   geom_step(aes(y = ecdf), color = "blue", size = 1.2) +
   geom_line(aes(y = norm_cdf), color = "red", size = 1.2) +
   labs(x = "x", y="",
-       title = "") +
+       title = " ") +
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5)) +
   theme(text=element_text(size=14))
 p1
